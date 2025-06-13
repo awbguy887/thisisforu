@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cute Heart Confetti Slider</title>
+  <style>
+    @import "https://unpkg.com/open-props/normalize.min.css";
+    @import "https://unpkg.com/open-props/open-props.min.css";
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #f8d9e1;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      perspective: 100vmin;
+      margin: 0;
+    }
+
+    .card {
+      --ratio-x: 0;
+      --ratio-y: 0;
+      overflow: hidden;
+      aspect-ratio: 3 / 4;
+      width: clamp(260px, 50vmin, 320px);
+      border-radius: 8px;
+      position: relative;
+      transform-style: preserve-3d;
+      touch-action: none;
+      transition: transform 0.2s;
+    }
+
+    .card:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at calc(var(--ratio-x) * 100%) calc(var(--ratio-y) * 100%), rgba(255, 255, 255, 0.5), transparent 50%);
+      background-repeat: no-repeat;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .flowing-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(45deg, pink, pink 10px, transparent 10px, transparent 20px);
+      z-index: 0;
+      animation: flowingPattern 5s linear infinite, fadeBackground 5s ease-in-out infinite;
+    }
+
+    @keyframes flowingPattern {
+      0% { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(100%) translateY(100%); }
+    }
+
+    @keyframes fadeBackground {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .slide-img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      z-index: 1;
+    }
+
+    .slide-img.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    button {
+      border: none;
+      font-family: "Verdana";
+      font-size: 14px;
+      background: #fff;
+      color: #000;
+      padding: 6px 10px;
+      border-radius: 5px;
+      margin: 10px 5px 0;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ccc;
+    }
+
+    button:active {
+      background: #00a;
+      color: #fff;
+    }
+
+    @media screen and (max-width: 768px) {
+      .card {
+        width: 90vw;
+      }
+
+      button {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Music -->
+  <audio id="background-audio" loop>
+    <source src="stk.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Card with 6 Images -->
+  <div class="card" data-active="false">
+    <div class="flowing-pattern"></div>
+
+    <!-- Image Slides -->
+    <img class="slide-img active" src="a1.png" alt="Image 1" />
+    <img class="slide-img" src="a2.png" alt="Image 2" />
+    <img class="slide-img" src="a3.png" alt="Image 3" />
+    <img class="slide-img" src="a4.png" alt="Image 4" />
+    <img class="slide-img" src="a5.png" alt="Image 5" />
+    <img class="slide-img" src="a6.png" alt="Image 6" />
+  </div>
+
+  <!-- Buttons -->
+  <button id="run">💖 Click for Hearts</button>
+  <button id="play-audio">🎵 Play Music</button>
+
+  <!-- Heart Confetti Script -->
+  <script type="module">
+    import { confetti } from "https://cdn.jsdelivr.net/npm/tsparticles-confetti/+esm";
+
+    let confettiInterval;
+
+    function stopConfetti() {
+      if (confettiInterval) cancelAnimationFrame(confettiInterval);
+    }
+
+    const run = () => {
+      stopConfetti();
+      const end = Date.now() + 15 * 1000;
+
+      (function frame() {
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 70,
+          origin: { x: 0 },
+          shapes: ["text"],
+          scalar: 2,
+          ticks: 200,
+          gravity: 0.5,
+          shapeOptions: {
+            text: {
+              value: ["💖", "❤️", "💕"]
+            }
+          }
+        });
+
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 70,
+          origin: { x: 1 },
+          shapes: ["text"],
+          scalar: 2,
+          ticks: 200,
+          gravity: 0.5,
+          shapeOptions: {
+            text: {
+              value: ["💖", "❤️", "💕"]
+            }
+          }
+        });
+
+        if (Date.now() < end) {
+          confettiInterval = requestAnimationFrame(frame);
+        }
+      })();
+    };
+
+    document.getElementById("run").addEventListener("click", run);
+    run(); // Auto-run on page load
+  </script>
+
+  <!-- Parallax Mouse Effect -->
+  <script>
+    const CARD = document.querySelector('.card');
+
+    const UPDATE = ({ x, y }) => {
+      const BOUNDS = CARD.getBoundingClientRect();
+      const posX = x - BOUNDS.x;
+      const posY = y - BOUNDS.y;
+      const ratioX = posX / BOUNDS.width;
+      const ratioY = posY / BOUNDS.height;
+      CARD.style.setProperty('--ratio-x', ratioX);
+      CARD.style.setProperty('--ratio-y', ratioY);
+    };
+
+    document.body.addEventListener('pointermove', UPDATE);
+
+    CARD.addEventListener('pointerenter', () => {
+      CARD.dataset.active = "true";
+    });
+
+    CARD.addEventListener('pointerleave', () => {
+      CARD.dataset.active = "false";
+    });
+  </script>
+
+  <!-- Auto Image Slider -->
+  <script>
+    const images = document.querySelectorAll(".slide-img");
+    let current = 0;
+
+    function showNextImage() {
+      images[current].classList.remove("active");
+      current = (current + 1) % images.length;
+      images[current].classList.add("active");
+    }
+
+    setInterval(showNextImage, 5000); // every 5 seconds
+  </script>
+
+  <!-- Play Music Button -->
+  <script>
+    document.getElementById('play-audio').addEventListener('click', () => {
+      const audio = document.getElementById('background-audio');
+      audio.play();
+    });
+  </script>
+
+</body>
+</html>
